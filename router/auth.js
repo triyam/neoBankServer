@@ -51,6 +51,28 @@ router.post("/register", async (req, res) => {
   }
 });
 
+
+router.post("/kyc", async (req, res) => {
+  try {
+    const { name, email, phone, dob, address, adhaarNo, panNo } = req.body;
+    if (!name || !email || !phone || !dob || !address || !adhaarNo || !panNo) {
+      return res.status(400).json({ error: "Empty Credentials!" })
+    }
+    const findUser = await User.findOne({ email: email })
+
+    if (findUser) {
+      const filter = { email: email }
+      const update = { phone: phone, address: address, dob: dob, adhaarNo: adhaarNo, panNo: panNo}
+      const userKyc = await User.findOneAndUpdate(filter, update, { returnOriginal: true })
+      console.log("KYC Updated Successfully");
+      res.status(201).json({ message: "KYC Updated Successfully" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+    console.log(error);
+  }
+})
+
 //login route
 router.post("/signin", async (req, res) => {
   try {
