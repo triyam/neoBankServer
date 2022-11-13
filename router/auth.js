@@ -1,4 +1,3 @@
-const { response } = require("express");
 const express = require("express");
 const router = express.Router();
 require("../db/conn");
@@ -6,6 +5,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../model/userSchema");
+const Account = require("../model/accountSchema");
 const authenticate = require("../middleware/authenticate");
 const sendEmail = require("../utils/sendEmail");
 // const cookieParser = require("cookie-parser");
@@ -21,7 +21,6 @@ router.post("/register", async (req, res) => {
   if (!name || !email || !password || !confirmPassword) {
     return res.status(422).json({ error: "Some data fields are missing" });
   }
-  console.log("working 1");
   try {
     const userEmailExists = await User.findOne({ email: email });
     // const userphoneExists = await User.findOne({ phone: phone });
@@ -31,7 +30,6 @@ router.post("/register", async (req, res) => {
         .status(422)
         .json({ error: "User with this email already exists" });
     }
-    console.log("workinng 2");
     if (password != confirmPassword) {
       return res
         .status(422)
@@ -42,7 +40,12 @@ router.post("/register", async (req, res) => {
         email,
         password,
       });
-      await user.save();
+      const userInfo = await user.save();
+      const account = new Account({
+        accountId: userInfo._id,
+        balance: "0",
+      });
+      await account.save();
       res.status(201).json({ message: "User Registered Successfully" });
     }
   } catch (error) {
@@ -164,10 +167,10 @@ router.put("/resetpassword/:resetToken", async (req, res) => {
   }
 });
 
-//about us page
-// router.get("/about", authenticate, (req, res) => {
-//   // console.log(req.rootUser);
-//   res.status(200).json(req.rootUser);
-// });
+//user details route
+router.get("/me", authenticate, (req, res) => {
+  // console.log(req.rootUser);
+  res.status(200).json(req.rootUser);
+});
 
 module.exports = router;
